@@ -1,0 +1,6 @@
+/Release/*
+/Debug/*
+/steam/*
+/*.vcxproj*
+/x64/*
+midnightguns
