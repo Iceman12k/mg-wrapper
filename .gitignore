@@ -4,3 +4,4 @@
 /*.vcxproj*
 /x64/*
 midnightguns
+*.o
