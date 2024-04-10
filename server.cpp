@@ -1,11 +1,11 @@
 
 
+#include <iostream>
+#include <cstdint>
 
 #include "fte_steam.h"
 #include "st_common.h"
 #include "toojpeg.h"
-
-#include <iostream>
 
 namespace fs = std::filesystem;
 using namespace std;
@@ -523,7 +523,7 @@ void Steam_SendInventory(void) //CL_INV_SENDITEMS
 	PIPE_WriteShort(InventoryService.itemArraySize);
 	if (InventoryService.itemArraySize > 0)
 	{
-		for (uint32 i = 0; i < InventoryService.itemArraySize; i++)
+		for (uint32_t i = 0; i < InventoryService.itemArraySize; i++)
 		{
 			item = &InventoryService.itemArray[i];
 			PIPE_WriteLongLong(item->m_itemId);
@@ -791,7 +791,7 @@ void Inventory_UpdateClientLoadout(int clientNum)
 void Steam_UpdateClient(void) //CL_INV_UPDATECLIENT
 {
 	char data[0xFFFF];
-	unsigned long datasize;
+	uint32_t datasize;
 	int clientNum = PIPE_ReadByte();
 	PIPE_ReadCharArray(data, &datasize);
 

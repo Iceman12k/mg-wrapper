@@ -3,6 +3,7 @@
 
 
 #include <iostream>
+#include <cstdint>
 #include "fte_steam.h"
 #include "st_common.h"
 #include "md5.h"
@@ -357,9 +358,9 @@ float PIPE_ReadFloat(void)
 }
 
 
-signed long PIPE_ReadLong(void)
+uint32_t PIPE_ReadLong(void)
 {
-	signed long dat = 0;
+	int32_t dat = 0;
 	int succ = 0;
 #if 0
 	succ = ReadFile(hPipeServer, &dat, 4, NULL, NULL);
@@ -375,9 +376,9 @@ signed long PIPE_ReadLong(void)
 }
 
 
-long long PIPE_ReadLongLong(void)
+uint64_t PIPE_ReadLongLong(void)
 {
-	long long dat = 0;
+	int64_t dat = 0;
 	int succ = 0;
 #if 0
 	succ = ReadFile(hPipeServer, &dat, 8, NULL, NULL);
@@ -393,9 +394,9 @@ long long PIPE_ReadLongLong(void)
 }
 
 
-signed short PIPE_ReadShort(void)
+int16_t PIPE_ReadShort(void)
 {
-	signed short dat = 0;
+	int16_t dat = 0;
 	int succ = 0;
 #if 0
 	succ = ReadFile(hPipeServer, &dat, 2, NULL, NULL);
@@ -411,9 +412,9 @@ signed short PIPE_ReadShort(void)
 }
 
 
-unsigned char PIPE_ReadByte(void)
+uint8_t PIPE_ReadByte(void)
 {
-	unsigned char dat = 0;
+	uint8_t dat = 0;
 	int succ = 0;
 #if 0
 	succ = ReadFile(hPipeServer, &dat, 1, NULL, NULL);
@@ -440,7 +441,7 @@ int PIPE_ReadString(char *buff)
 		ReadFile(hPipeServer, buff + i, 1, NULL, NULL);
 #endif
 		readPipe(pipeParentRead, buff + i, 1);
-		if (buff[i] == NULL)
+		if (buff[i] == 0)
 			break;
 	}
 	amount_written = i;
@@ -458,7 +459,7 @@ int PIPE_ReadString(char *buff)
 }
 
 
-void PIPE_ReadCharArray(char *into, unsigned long *size)
+void PIPE_ReadCharArray(char *into, uint32_t *size)
 {
 	*size = (unsigned long)PIPE_ReadShort();
 	int succ = 0;
@@ -480,8 +481,8 @@ void PIPE_ReadCharArray(char *into, unsigned long *size)
 
 int PIPE_WriteFloat(float dat_float)
 {
-	long dat;
-	memcpy(&dat, &dat_float, sizeof(long));
+	uint32_t dat;
+	memcpy(&dat, &dat_float, sizeof(uint32_t));
 
 	int seek = pipeSendBuffer.cursize;
 	pipeSendBuffer.data[seek] = dat & 0xFF;
@@ -495,7 +496,7 @@ int PIPE_WriteFloat(float dat_float)
 }
 
 
-int PIPE_WriteLong(signed long dat)
+int PIPE_WriteLong(uint32_t dat)
 {
 	int seek = pipeSendBuffer.cursize;
 	pipeSendBuffer.data[seek] = dat & 0xFF;
@@ -509,7 +510,7 @@ int PIPE_WriteLong(signed long dat)
 }
 
 
-int PIPE_WriteLongLong(long long dat)
+int PIPE_WriteLongLong(uint64_t dat)
 {
 	int seek = pipeSendBuffer.cursize;
 	pipeSendBuffer.data[seek] = dat & 0xFF;
@@ -527,7 +528,7 @@ int PIPE_WriteLongLong(long long dat)
 }
 
 
-int PIPE_WriteShort(signed short dat)
+int PIPE_WriteShort(int16_t dat)
 {
 	int seek = pipeSendBuffer.cursize;
 	pipeSendBuffer.data[seek] = dat & 0xFF;
@@ -539,7 +540,7 @@ int PIPE_WriteShort(signed short dat)
 }
 
 
-int PIPE_WriteByte(unsigned char dat)
+int PIPE_WriteByte(uint8_t dat)
 {
 	int seek = pipeSendBuffer.cursize;
 	pipeSendBuffer.data[seek] = dat;
@@ -554,8 +555,8 @@ int PIPE_WriteString(char* str)
 	int str_length = strlen(str);
 	memcpy(&(pipeSendBuffer.data[pipeSendBuffer.cursize]), str, str_length);
 
-	if (str[str_length - 1] != NULL)
-		pipeSendBuffer.data[pipeSendBuffer.cursize + str_length] = NULL; str_length++;
+	if (str[str_length - 1] != 0)
+		pipeSendBuffer.data[pipeSendBuffer.cursize + str_length] = 0; str_length++;
 
 	pipeSendBuffer.cursize += str_length;
 
@@ -563,9 +564,9 @@ int PIPE_WriteString(char* str)
 }
 
 
-int PIPE_WriteCharArray(char *dat, unsigned long size)
+int PIPE_WriteCharArray(char *dat, uint32_t size)
 {
-	PIPE_WriteShort((signed short)size);
+	PIPE_WriteShort((int16_t)size);
 
 	int seek = pipeSendBuffer.cursize;
 	memcpy(&(pipeSendBuffer.data[seek]), dat, size);
@@ -610,7 +611,7 @@ void Steam_Auth_Fetch(void)
 
 	char authToken[1024];
 	uint32 authLength;
-	myAuthTicket = SteamUser()->GetAuthSessionTicket(authToken, sizeof(authToken), &authLength);
+	myAuthTicket = SteamUser()->GetAuthSessionTicket(authToken, sizeof(authToken), &authLength, NULL);
 
 
 	Con_Print("auth generated");
@@ -661,7 +662,7 @@ void Steam_Auth_Validate(void)
 	cout << "steam id length: " << to_string(steamIDLength) << endl;
 
 	char authToken[1024];
-	unsigned long authSize = 0;
+	uint32_t authSize = 0;
 	PIPE_ReadCharArray(authToken, &authSize);
 
 
@@ -679,7 +680,7 @@ void Steam_Auth_Validate(void)
 
 
 	CSteamID steamID;
-	unsigned long long intID = stoull(convertToString(steamIDChar, steamIDLength));
+	uint64_t intID = stoull(convertToString(steamIDChar, steamIDLength));
 	steamID.SetFromUint64(intID);
 
 	int result;
