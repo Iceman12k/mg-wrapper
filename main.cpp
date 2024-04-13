@@ -740,6 +740,8 @@ void Steam_Init(void)
 	func_readarray[CL_INV_CLIENTLOADOUT] = Steam_GetClientLoadout;
 	func_readarray[CL_INV_GRANTITEM] = Steam_GrantItem;
 	func_readarray[CL_INV_TIMEDROP] = Steam_PlaytimeDrop;
+
+	func_readarray[CL_RICHPRESCENSE] = Steam_RichPresence;
 }
 
 

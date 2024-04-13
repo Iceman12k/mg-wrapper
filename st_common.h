@@ -101,6 +101,7 @@ void Steam_RequestedSerial(void);
 void Steam_GetClientLoadout(void);
 void Steam_GrantItem(void);
 void Steam_PlaytimeDrop(void);
+void Steam_RichPresence(void);
 void Con_Print(const char *msg);
 ISteamInventory *SteamGetInventory(void);
 

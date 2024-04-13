@@ -1041,6 +1041,81 @@ void Steam_PlayingWith(void)
 }
 
 
+void Steam_RichPresence(void)
+{
+	richpresencetypes type = (richpresencetypes)PIPE_ReadByte();
+	static richpresencestates rich_state;
+	static int rich_score[2];
+	static char rich_serverip[MAX_STRING];
+	static char rich_servername[MAX_STRING];
+	static char rich_mapname[MAX_STRING];
+	static int rich_partysize;
+
+	if (type == RP_STATE)
+	{
+		rich_state = (richpresencestates)PIPE_ReadByte();
+		const char *status;
+
+		switch (rich_state) {
+			default:
+			case RPSTATE_MENU:
+				status = "#Status_MenuDisconnected"; break;
+			case RPSTATE_MULTIPLAYER:
+				status = "#Status_Multiplayer"; break;
+			case RPSTATE_MULTIPLAYER_WARMUP:
+				status = "#Status_MultiplayerWarmup"; break;
+			case RPSTATE_MULTIPLAYER_RANKED:
+				status = "#Status_MultiplayerRanked"; break;
+			case RPSTATE_SINGLEPLAYER:
+				status = "#Status_Singleplayer"; break;
+			case RPSTATE_COOP:
+				status = "#Status_Coop"; break;
+		}
+
+		SteamFriends()->SetRichPresence("steam_display", status);
+	}
+	else if (type == RP_SCORE)
+	{
+		char score_string[MAX_STRING];
+		const char *score_type;
+		
+		rich_score[0] = PIPE_ReadShort();
+		rich_score[1] = PIPE_ReadShort();
+		snprintf(score_string, MAX_STRING, "[ %i : %i ]", rich_score[0], rich_score[1]);
+		if (rich_score[0] > rich_score[1])
+			score_type = "#Winning";
+		else if (rich_score[0] < rich_score[1])
+			score_type = "#Losing";
+		else
+			score_type = "#Tied";
+
+		SteamFriends()->SetRichPresence("score", score_string);
+		SteamFriends()->SetRichPresence("scoretype", score_type);
+	}
+	else if (type == RP_SERVER)
+	{
+		char status_string[512];
+		char connect_string[512];
+		char partysize_string[8];
+		PIPE_ReadString(rich_mapname);
+		rich_partysize = PIPE_ReadByte();
+		PIPE_ReadString(rich_serverip);
+		PIPE_ReadString(rich_servername);
+
+		snprintf(status_string, 512, "Playing on %s", rich_servername);
+		SteamFriends()->SetRichPresence("status", status_string);
+
+		snprintf(connect_string, 512, "+connect %s", rich_serverip);
+		SteamFriends()->SetRichPresence("connect", connect_string);
+		
+		snprintf(partysize_string, 8, "%i", rich_partysize);
+		SteamFriends()->SetRichPresence("steam_player_group", rich_serverip);
+		SteamFriends()->SetRichPresence("steam_player_group_size", partysize_string);
+
+		SteamFriends()->SetRichPresence("map", rich_mapname);
+	}
+}
+
 
 void Steam_Disconnect(void)
 {
