@@ -10,6 +10,7 @@ current features are:
 - SteamGameServer
 - SteamUserAuthentication (the new system)
 - SteamInventoryService (some of the features, not all yet)
+- SteamRichPresence (new as of April 2024)
 - Some SteamNetworking that I poked at but never did anything with
 
 the other half of this code is located in [this mess of an FTEQW plugin](https://github.com/Iceman12k/fteqw-mguns/blob/master/plugins/steam/steam.c)
