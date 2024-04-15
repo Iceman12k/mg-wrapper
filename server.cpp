@@ -190,9 +190,10 @@ void Steam_AuthAccepted(CSteamID steamid)
 		}
 	}
 
+	string steamid_str = to_string(steamid.ConvertToUint64());
 	PIPE_WriteByte(SV_AUTH_VALIDATED);
 	PIPE_WriteByte(entnum);
-	PIPE_WriteString((char*)(to_string(steamid.ConvertToUint64())).c_str());
+	PIPE_WriteString(steamid_str.c_str(), strlen(steamid_str.c_str()));
 }
 
 
@@ -263,8 +264,9 @@ void transferToEngine(int imageHandle, string path, string filename)
 
 void Steam_SaveAvatar(int imageIndex, CSteamID avatar_steamID)
 {
+	string steamid_str = (to_string(avatar_steamID.ConvertToUint64()));
 	PIPE_WriteByte(SV_AVATAR_FETCHED);
-	PIPE_WriteString((char*)(to_string(avatar_steamID.ConvertToUint64())).c_str());
+	PIPE_WriteString(steamid_str.c_str(), strlen(steamid_str.c_str()));
 
 	string path = dirSteamTemp + ((to_string(avatar_steamID.ConvertToUint64())).c_str()) + "/";
 	string filename;
@@ -416,7 +418,7 @@ void CInventoryService::Inventory_ResultReady(SteamInventoryResultReady_t* pCall
 
 					PIPE_WriteByte(SV_INV_NEWITEM);
 					PIPE_WriteLong(item->m_iDefinition);
-					PIPE_WriteString(itemName);
+					PIPE_WriteString(itemName, sizeof(itemName));
 				}
 
 				SteamItemDetails_t *itArray = (SteamItemDetails_t*)malloc(sizeof(SteamItemDetails_t) * (itemArraySize + newitemArraySize));
@@ -537,8 +539,8 @@ void Steam_SendProperty(long int itemid, char *name, char *value)
 {
 	PIPE_WriteByte(SV_INV_PROPERTY);
 	PIPE_WriteLong(itemid);
-	PIPE_WriteString(name);
-	PIPE_WriteString(value);
+	PIPE_WriteString(name, strlen(name));
+	PIPE_WriteString(value, strlen(value));
 }
 
 
@@ -733,8 +735,8 @@ void Steam_GetInstanceProperty(void) //CL_INV_GETINSTANCEPROPERTY
 
 		PIPE_WriteByte(SV_INV_PROPERTY);
 		PIPE_WriteLongLong(iteminst);
-		PIPE_WriteString(propertyname);
-		PIPE_WriteString(propertyvalue);
+		PIPE_WriteString(propertyname, sizeof(propertyname));
+		PIPE_WriteString(propertyvalue, sizeof(propertyvalue));
 	}
 	//*/
 }
@@ -992,7 +994,7 @@ void Steam_StartServer(void)
 void Steam_ConnectToServer(void)
 {
 	bool isListen = PIPE_ReadByte();
-	char steamid_str[64];
+	char steamid_str[MAX_STRING];
 	PIPE_ReadString(steamid_str);
 
 	return;
@@ -1029,8 +1031,11 @@ void Steam_ConnectToServer(void)
 
 void Steam_PlayingWith(void)
 {
-	char steamid_str[64];
+	char steamid_str[MAX_STRING];
 	PIPE_ReadString(steamid_str);
+
+	if (*steamid_str == 0) // uh.. g-g-g-ghooost
+		return;
 
 	CSteamID playingID;
 	playingID.SetFromUint64(stoull(steamid_str));

@@ -550,13 +550,23 @@ int PIPE_WriteByte(uint8_t dat)
 }
 
 
-int PIPE_WriteString(char* str)
+int PIPE_WriteString(const char* str, size_t maxsz)
 {
-	int str_length = strlen(str);
+	int str_length = strnlen(str, maxsz);
+	if (str_length <= 0)
+	{
+		PIPE_WriteByte(0);
+		return false;
+	}
+
+	// write string to out buffer
 	memcpy(&(pipeSendBuffer.data[pipeSendBuffer.cursize]), str, str_length);
 
 	if (str[str_length - 1] != 0)
-		pipeSendBuffer.data[pipeSendBuffer.cursize + str_length] = 0; str_length++;
+	{
+		pipeSendBuffer.data[pipeSendBuffer.cursize + str_length] = 0;
+		str_length++;
+	}
 
 	pipeSendBuffer.cursize += str_length;
 
@@ -564,7 +574,7 @@ int PIPE_WriteString(char* str)
 }
 
 
-int PIPE_WriteCharArray(char *dat, uint32_t size)
+int PIPE_WriteCharArray(const char *dat, uint32_t size)
 {
 	PIPE_WriteShort((int16_t)size);
 
@@ -580,7 +590,7 @@ void Con_Print(const char *dat)
 {
 #ifdef WIN32
 	PIPE_WriteByte(SV_PRINT);
-	PIPE_WriteString((char*)dat);
+	PIPE_WriteString((char*)dat, strlen(dat));
 #else
 	cout << dat;
 #endif
@@ -592,14 +602,15 @@ void Con_Print(const char *dat)
 
 void Steam_Handshake(void)
 {
+	std::string steamid_str = (to_string(steam_LocalID.ConvertToUint64()));
 	PIPE_WriteByte(SV_STEAMID);
-	PIPE_WriteString((char*)(to_string(steam_LocalID.ConvertToUint64())).c_str());
+	PIPE_WriteString(steamid_str.c_str(), strlen(steamid_str.c_str()));
 
 	if (is_server)
 		return;
 
 	PIPE_WriteByte(SV_SETNAME);
-	PIPE_WriteString(steam_UserName);
+	PIPE_WriteString(steam_UserName, sizeof(steam_UserName));
 }
 
 
@@ -678,9 +689,10 @@ void Steam_Auth_Validate(void)
 	Con_Print(md5(convertToString(authToken, authSize)).c_str());
 	Con_Print("\n");
 
+	
 
 	CSteamID steamID;
-	uint64_t intID = stoull(convertToString(steamIDChar, steamIDLength));
+	uint64_t intID = atoll(steamIDChar);//stoull(convertToString(steamIDChar, steamIDLength));
 	steamID.SetFromUint64(intID);
 
 	int result;
@@ -771,7 +783,7 @@ void processCommands(void)
 		unsigned char index = PIPE_ReadByte();
 		while (index != 255)
 		{
-			cout << "reading " << to_string(index) << endl;
+			//cout << "reading " << to_string(index) << endl;
 
 			if (index < CL_MAX)
 			{
@@ -996,10 +1008,6 @@ static int mainline(int argc, char **argv)
 		strcpy(steam_UserName, SteamFriends()->GetPersonaName());
 		steam_LocalID = SteamUser()->GetSteamID();
 	}
-
-
-	PIPE_WriteByte(SV_STEAMID);
-	PIPE_WriteString((char*)(to_string(steam_LocalID.ConvertToUint64())).c_str());
 
 	//Con_Print("SteamGetInventory()->LoadItemDefinitions(): ");
 	//Con_Print(to_string(SteamGetInventory()->LoadItemDefinitions()).c_str());
