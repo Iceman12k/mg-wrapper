@@ -1071,6 +1071,8 @@ void Steam_RichPresence(void)
 				status = "#Status_MultiplayerWarmup"; break;
 			case RPSTATE_MULTIPLAYER_RANKED:
 				status = "#Status_MultiplayerRanked"; break;
+			case RPSTATE_MULTIPLAYER_SPECTATE:
+				status = "#Status_MultiplayerSpectate"; break;
 			case RPSTATE_SINGLEPLAYER:
 				status = "#Status_Singleplayer"; break;
 			case RPSTATE_COOP:
