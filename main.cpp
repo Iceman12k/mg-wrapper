@@ -327,10 +327,12 @@ pipebuff_t pipeSendBuffer;
 
 int PIPE_SendData(void)
 {
-	unsigned long bytes_written = 0;
+	uint32_t bytes_written = 0;
 	int succ = 0;
 	succ = writePipe(pipeParentWrite, pipeSendBuffer.data, pipeSendBuffer.cursize);
-	pipeSendBuffer.cursize = 0;
+	
+	//if (succ)
+		pipeSendBuffer.cursize = 0;
 
 	return succ;
 }
@@ -552,23 +554,14 @@ int PIPE_WriteByte(uint8_t dat)
 
 int PIPE_WriteString(const char* str, size_t maxsz)
 {
-	int str_length = strnlen(str, maxsz);
-	if (str_length <= 0)
+	int slength = strnlen(str, maxsz);
+	int i;
+	for(i = 0; i < slength; i++)
 	{
-		PIPE_WriteByte(0);
-		return false;
+		pipeSendBuffer.data[pipeSendBuffer.cursize + i] = str[i];
 	}
-
-	// write string to out buffer
-	memcpy(&(pipeSendBuffer.data[pipeSendBuffer.cursize]), str, str_length);
-
-	if (str[str_length - 1] != 0)
-	{
-		pipeSendBuffer.data[pipeSendBuffer.cursize + str_length] = 0;
-		str_length++;
-	}
-
-	pipeSendBuffer.cursize += str_length;
+	pipeSendBuffer.data[pipeSendBuffer.cursize + i] = 0;
+	pipeSendBuffer.cursize += slength + 1;
 
 	return true;
 }
@@ -775,28 +768,30 @@ void processCommands(void)
 
 		if (is_server)
 			SteamGameServer_RunCallbacks();
-
-		SteamAPI_RunCallbacks();
+		else
+			SteamAPI_RunCallbacks();
 		//Con_Print("SteamAPI_RunCallbacks\n");
-		//cout << "processCommands tick" << endl;
+		//cout << "\x1b[1;31m" << "processCommands tick" << "\x1b[0m" << endl;
 
-		unsigned char index = PIPE_ReadByte();
+		///*
+		uint8_t index = PIPE_ReadByte();
 		while (index != 255)
 		{
 			//cout << "reading " << to_string(index) << endl;
+			//Con_Print("reading client command ");
+			//Con_Print(to_string(index).c_str());
+			//Con_Print("\n");
 
 			if (index < CL_MAX)
 			{
-				//Con_Print("reading client command ");
-				//Con_Print(to_string(index).c_str());
-				//Con_Print("\n");
 				//cout << "reading client command " << to_string(index) << endl;
 				func_readarray[index]();
 			}
 
 			index = PIPE_ReadByte();
 		}
-
+		//*/
+		
 		if (pipeSendBuffer.cursize)
 			PIPE_SendData();
 
@@ -826,15 +821,15 @@ void processCommands(void)
 
 		Sleep(100);
 #else
-		int status;
+		int status = 1; // bruh fuckin moment, nobody told me this just retained default value if nothing changed
 		waitpid(childPid, &status, WNOHANG);
-
+		
 		if (!status)
 		{
+			//cout << "\x1b[1;31m" << to_string(childPid) << "\x1b[0m" << endl;
 			Steam_Cleanup();
 			exit(0);
 		}
-
 
 		sleep(1);
 #endif
@@ -1009,6 +1004,10 @@ static int mainline(int argc, char **argv)
 		steam_LocalID = SteamUser()->GetSteamID();
 	}
 
+	//std::string steamid_str = (to_string(steam_LocalID.ConvertToUint64()));
+	//PIPE_WriteByte(SV_STEAMID);
+	//PIPE_WriteString(steamid_str.c_str(), strlen(steamid_str.c_str()));
+
 	//Con_Print("SteamGetInventory()->LoadItemDefinitions(): ");
 	//Con_Print(to_string(SteamGetInventory()->LoadItemDefinitions()).c_str());
 	//Con_Print("\n");
@@ -1024,7 +1023,7 @@ static int mainline(int argc, char **argv)
 		//
 	}
 
-
+	
 	dbgpipe("Parent in command processing loop.\n");
 	// Now, we block for instructions until the pipe fails (child closed it or
 	//  terminated/crashed).
