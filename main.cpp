@@ -908,6 +908,12 @@ static int mainline(int argc, char **argv)
 #else
 			strcpy(EXECUTABLE_NAME, "fteqw-sv64");
 #endif
+			if (i + 1 >= argc)
+			{
+				Con_Print("Server detected: anonymous\n");
+				break;
+			}
+
 			char str[MAX_STRING];
 			strcpy(str, argv[i + 1]);
 			
