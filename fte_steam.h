@@ -1,7 +1,7 @@
 #pragma once
 
 
-#define MAX_BUFFSIZE	8192
+#define MAX_BUFFSIZE	4096
 #define MAX_STRING		256
 
 #define MAX_LOADOUT		16
@@ -98,7 +98,7 @@ int PIPE_WriteLongLong(uint64_t dat);
 int PIPE_WriteShort(int16_t dat);
 int PIPE_WriteByte(uint8_t dat);
 int PIPE_WriteString(const char *str, size_t maxsz);
-int PIPE_WriteCharArray(const char *dat, uint32_t size);
+int PIPE_WriteCharArray(char *dat, uint32_t size);
 
 
 

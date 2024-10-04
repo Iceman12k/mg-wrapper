@@ -837,8 +837,11 @@ void Steam_RequestedSerial(void) // CL_INV_BUILDSERIAL
 		return;
 	}
 
-	char data[4096];
-	uint32 datasize = sizeof(data);
+	char *data;
+	uint32_t datasize;
+	SteamGetInventory()->SerializeResult(resultToSerialize, NULL, &datasize);
+	data = (char*)malloc(datasize);
+
 	if (SteamGetInventory()->SerializeResult(resultToSerialize, data, &datasize))
 	{
 		PIPE_WriteByte(SV_INV_LOCALSERIAL);
@@ -848,6 +851,8 @@ void Steam_RequestedSerial(void) // CL_INV_BUILDSERIAL
 	{
 		InventoryService.waitingtoSerialize = resultToSerialize;
 	}
+
+	free(data);
 }
 
 void Steam_GetClientLoadout(void)

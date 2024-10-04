@@ -318,12 +318,12 @@ string convertToString(char* a, int size)
 
 typedef struct
 {
-	unsigned char	data[MAX_BUFFSIZE];
+	uint8_t			*data;
+	uint32_t		buffsize;
 	int				cursize;
 } pipebuff_t;
 
-pipebuff_t pipeSendBuffer;
-
+pipebuff_t pipeSendBuffer = {};
 
 int PIPE_SendData(void)
 {
@@ -479,13 +479,30 @@ void PIPE_ReadCharArray(char *into, uint32_t *size)
 
 
 
+void PIPE_AllocSize(int amt)
+{
+	if ((pipeSendBuffer.cursize + amt) < pipeSendBuffer.buffsize)
+		return;
 
+	uint32_t newsize = pipeSendBuffer.buffsize + MAX_BUFFSIZE;
+	uint8_t* newdata = (uint8_t*)malloc(newsize);
+
+	if (pipeSendBuffer.data)
+	{
+		memcpy(newdata, pipeSendBuffer.data, pipeSendBuffer.cursize); // copy old buffer over
+		free(pipeSendBuffer.data); // cleanup old buffer
+	}
+	
+	pipeSendBuffer.data = newdata;
+	pipeSendBuffer.buffsize = newsize;
+}
 
 int PIPE_WriteFloat(float dat_float)
 {
 	uint32_t dat;
 	memcpy(&dat, &dat_float, sizeof(uint32_t));
 
+	PIPE_AllocSize(sizeof(uint32_t));
 	int seek = pipeSendBuffer.cursize;
 	pipeSendBuffer.data[seek] = dat & 0xFF;
 	pipeSendBuffer.data[seek + 1] = (dat >> 8) & 0xFF;
@@ -500,6 +517,7 @@ int PIPE_WriteFloat(float dat_float)
 
 int PIPE_WriteLong(uint32_t dat)
 {
+	PIPE_AllocSize(sizeof(uint32_t));
 	int seek = pipeSendBuffer.cursize;
 	pipeSendBuffer.data[seek] = dat & 0xFF;
 	pipeSendBuffer.data[seek + 1] = (dat >> 8) & 0xFF;
@@ -514,6 +532,7 @@ int PIPE_WriteLong(uint32_t dat)
 
 int PIPE_WriteLongLong(uint64_t dat)
 {
+	PIPE_AllocSize(sizeof(uint64_t));
 	int seek = pipeSendBuffer.cursize;
 	pipeSendBuffer.data[seek] = dat & 0xFF;
 	pipeSendBuffer.data[seek + 1] = (dat >> 8) & 0xFF;
@@ -532,6 +551,7 @@ int PIPE_WriteLongLong(uint64_t dat)
 
 int PIPE_WriteShort(int16_t dat)
 {
+	PIPE_AllocSize(sizeof(int16_t));
 	int seek = pipeSendBuffer.cursize;
 	pipeSendBuffer.data[seek] = dat & 0xFF;
 	pipeSendBuffer.data[seek + 1] = (dat >> 8) & 0xFF;
@@ -544,6 +564,7 @@ int PIPE_WriteShort(int16_t dat)
 
 int PIPE_WriteByte(uint8_t dat)
 {
+	PIPE_AllocSize(sizeof(uint8_t));
 	int seek = pipeSendBuffer.cursize;
 	pipeSendBuffer.data[seek] = dat;
 	pipeSendBuffer.cursize += 1;
@@ -555,6 +576,8 @@ int PIPE_WriteByte(uint8_t dat)
 int PIPE_WriteString(const char* str, size_t maxsz)
 {
 	int slength = strnlen(str, maxsz);
+	PIPE_AllocSize(slength + 1);
+
 	int i;
 	for(i = 0; i < slength; i++)
 	{
@@ -567,8 +590,9 @@ int PIPE_WriteString(const char* str, size_t maxsz)
 }
 
 
-int PIPE_WriteCharArray(const char *dat, uint32_t size)
+int PIPE_WriteCharArray(char *dat, uint32_t size)
 {
+	PIPE_AllocSize(sizeof(int16_t) + size);
 	PIPE_WriteShort((int16_t)size);
 
 	int seek = pipeSendBuffer.cursize;
