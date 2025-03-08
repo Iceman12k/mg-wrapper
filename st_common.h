@@ -102,6 +102,7 @@ void Steam_GetClientLoadout(void);
 void Steam_GrantItem(void);
 void Steam_PlaytimeDrop(void);
 void Steam_RichPresence(void);
+void Steam_GrantPromoItems(void);
 void Con_Print(const char *msg);
 ISteamInventory *SteamGetInventory(void);
 

@@ -628,6 +628,8 @@ void Steam_Handshake(void)
 
 	PIPE_WriteByte(SV_SETNAME);
 	PIPE_WriteString(steam_UserName, sizeof(steam_UserName));
+
+	Steam_GrantPromoItems();
 }
 
 

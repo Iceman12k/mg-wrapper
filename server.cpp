@@ -945,7 +945,15 @@ void Steam_PlaytimeDrop(void)
 	*/
 }
 
-
+void Steam_GrantPromoItems(void)
+{
+	SteamInventoryResult_t promoResult;
+	if (SteamInventory()->GrantPromoItems(&promoResult))
+	{
+		// gotta clean up if it was a success
+		SteamInventory()->DestroyResult(promoResult);
+	}
+}
 
 
 
